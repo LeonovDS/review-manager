@@ -5,6 +5,12 @@
 ## Запуск проекта
 
 ```bash
+docker compose up
+```
+
+Или только сервер:
+
+```bash
 go run ./cmd/manager/
 ```
 
