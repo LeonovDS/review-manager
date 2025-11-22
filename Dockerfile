@@ -10,6 +10,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/manage
 FROM gcr.io/distroless/static-debian12
 WORKDIR /app
 COPY --from=builder /app/main .
+COPY migrations ./migrations
 EXPOSE 8080
 ENTRYPOINT [ "./main" ]
 
