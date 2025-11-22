@@ -10,9 +10,10 @@
 docker compose up
 ```
 
-Или только сервер:
+Или запускать сервер вне Docker:
 
 ```bash
+docker compose up database --detach
 go run ./cmd/manager/
 ```
 
