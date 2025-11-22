@@ -4,6 +4,7 @@ package database
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -32,8 +33,13 @@ func migrateUp(connString string) error {
 	}
 
 	err = m.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	if errors.Is(err, migrate.ErrNoChange) {
+		slog.Info("Database is up-to-date, no migrations applied")
+		return nil
+	} else if err != nil {
 		return err
 	}
+
+	slog.Info("Migrations applied successfully")
 	return nil
 }

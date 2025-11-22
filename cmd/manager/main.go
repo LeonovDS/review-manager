@@ -24,5 +24,5 @@ func main() {
 		return
 	}
 
-	slog.Info("DB connection created")
+	slog.Info("Database connection created")
 }
