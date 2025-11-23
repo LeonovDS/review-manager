@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx" // database implementation for migrations
@@ -27,6 +28,7 @@ func Connect(ctx context.Context) (*pgxpool.Pool, error) {
 }
 
 func migrateUp(connString string) error {
+	connString = strings.Replace(connString, "postgres", "pgx", 1)
 	m, err := migrate.New("file://migrations/", connString)
 	if err != nil {
 		return err
