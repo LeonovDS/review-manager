@@ -33,11 +33,14 @@ func main() {
 	slog.Info("Database connection created")
 
 	teamRepo := repository.Team{Pool: pool}
-	teamUsecase := usecase.AddTeam{Repository: &teamRepo}
-	teamHandler := handlers.Team{UC: &teamUsecase}
+	teamHandler := handlers.Team{
+		AddUC: &usecase.AddTeam{Repository: &teamRepo},
+		GetUC: &usecase.GetTeam{Repository: &teamRepo},
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /team/add", teamHandler.AddTeam)
+	mux.HandleFunc("GET /team/get", teamHandler.GetTeam)
 
 	var server http.Server
 	server.Addr = ":8080"

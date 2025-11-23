@@ -19,6 +19,11 @@ func (m *mockRepo) Add(team model.Team) (model.Team, error) {
 	return args.Get(0).(model.Team), args.Error(1)
 }
 
+func (m *mockRepo) Get(name string) (model.Team, error) {
+	args := m.Called(name)
+	return args.Get(0).(model.Team), args.Error(1)
+}
+
 func TestTeamAdd(t *testing.T) {
 	assert := assert.New(t)
 	repo := new(mockRepo)
