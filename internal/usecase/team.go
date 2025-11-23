@@ -5,6 +5,7 @@ import "github.com/LeonovDS/review-manager/internal/model"
 
 type teamRepository interface {
 	Add(team model.Team) (model.Team, error)
+	Get(name string) (model.Team, error)
 }
 
 // AddTeam provides use case for creating a new team.
@@ -18,4 +19,14 @@ func (u *AddTeam) Add(team model.Team) (model.Team, error) {
 		return model.Team{}, model.ErrBadRequest
 	}
 	return u.Repository.Add(team)
+}
+
+// GetTeam provides use case for getting team from repository.
+type GetTeam struct {
+	Repository teamRepository
+}
+
+// Get queries repository for a team with given name.
+func (u *GetTeam) Get(name string) (model.Team, error) {
+	return u.Repository.Get(name)
 }

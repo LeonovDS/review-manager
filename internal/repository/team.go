@@ -23,7 +23,7 @@ func (r *Team) Add(team model.Team) (model.Team, error) {
 		INSERT INTO Team (name) 
 		VALUES ($1) 
 		ON CONFLICT (name) DO NOTHING 
-		RETURNING name
+		RETURNING name;
 	`, team.TeamName).Scan(&name)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -31,5 +31,23 @@ func (r *Team) Add(team model.Team) (model.Team, error) {
 	} else if err != nil {
 		return model.Team{}, err
 	}
+	return model.Team{TeamName: name, Members: []model.TeamMember{}}, nil
+}
+
+// Get searches database for team with given name.
+func (r *Team) Get(name string) (model.Team, error) {
+	var dbName string
+	err := r.Pool.QueryRow(context.TODO(), `
+		SELECT (name) 
+		FROM Team 
+		WHERE name=$1;
+	`, name).Scan(&dbName)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Team{}, fmt.Errorf("%s %w", name, model.ErrNotFound)
+	} else if err != nil {
+		return model.Team{}, err
+	}
+
 	return model.Team{TeamName: name, Members: []model.TeamMember{}}, nil
 }

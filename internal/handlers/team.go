@@ -11,11 +11,16 @@ import (
 
 // Team contains dependencies for /team handlers.
 type Team struct {
-	UC addTeamUsecase
+	AddUC addTeamUsecase
+	GetUC getTeamUsecase
 }
 
 type addTeamUsecase interface {
 	Add(t model.Team) (model.Team, error)
+}
+
+type getTeamUsecase interface {
+	Get(name string) (model.Team, error)
 }
 
 // AddTeam - POST /team/add - adds team and users.
@@ -28,13 +33,35 @@ func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err = h.UC.Add(team)
+	team, err = h.AddUC.Add(team)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(team)
+	if err != nil {
+		slog.Error("Failed to write response", "err", err)
+		return
+	}
+}
+
+// GetTeam - GET /team/get - get team info.
+func (h *Team) GetTeam(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("team_name")
+	if name == "" {
+		handleError(w, model.ErrBadRequest)
+		return
+	}
+
+	team, err := h.GetUC.Get(name)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(team)
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)

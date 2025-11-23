@@ -24,6 +24,9 @@ func handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, model.ErrTeamExists):
 		data.Code = "TEAM_EXISTS"
 		code = http.StatusBadRequest
+	case errors.Is(err, model.ErrNotFound):
+		data.Code = "NOT_FOUND"
+		code = http.StatusNotFound
 	default:
 		data.Code = "INTERNAL_ERROR"
 		code = http.StatusInternalServerError
