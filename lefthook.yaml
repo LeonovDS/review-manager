@@ -2,3 +2,5 @@ pre-commit:
   jobs:
     - name: lint backend (golangci-lint)
       run: golangci-lint run
+    - name: tests
+      run: go test ./...
