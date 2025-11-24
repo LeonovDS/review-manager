@@ -10,11 +10,16 @@ import (
 
 // PullRequest provides handlers for pull request operations.
 type PullRequest struct {
-	CreatePRUC createPR
+	CreateUC createPR
+	MergeUC  mergePR
 }
 
 type createPR interface {
 	Create(id, name, author string) (model.PullRequest, error)
+}
+
+type mergePR interface {
+	Merge(id string) (model.PullRequest, error)
 }
 
 type createPRRequest struct {
@@ -32,13 +37,40 @@ func (h *PullRequest) CreatePR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pr, err := h.CreatePRUC.Create(req.ID, req.Name, req.Author)
+	pr, err := h.CreateUC.Create(req.ID, req.Name, req.Author)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(pr)
+	if err != nil {
+		slog.Error("Failed to write response", "err", err)
+		return
+	}
+}
+
+type mergePRRequest struct {
+	ID string `json:"pull_request_id"`
+}
+
+// MergePR - POST /pullRequest/merge - merges a pull request (idempotent).
+func (h *PullRequest) MergePR(w http.ResponseWriter, r *http.Request) {
+	var req mergePRRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		handleError(w, model.ErrBadRequest)
+		return
+	}
+
+	pr, err := h.MergeUC.Merge(req.ID)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(pr)
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)
