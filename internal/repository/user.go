@@ -68,3 +68,21 @@ func (r *User) GetByTeam(teamName string) ([]model.TeamMember, error) {
 
 	return results, nil
 }
+
+// UserExist checks if user with given id exists in database and returns error if missing.
+func (r *User) UserExist(id string) error {
+	query := `
+		SELECT user_id
+		FROM Users 
+		WHERE user_id = $1;
+	`
+	var userID string
+	err := r.Pool.QueryRow(context.TODO(), query, id).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
