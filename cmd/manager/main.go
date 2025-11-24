@@ -33,9 +33,10 @@ func main() {
 	slog.Info("Database connection created")
 
 	teamRepo := repository.Team{Pool: pool}
+	userRepo := repository.User{Pool: pool}
 	teamHandler := handlers.Team{
-		AddUC: &usecase.AddTeam{Repository: &teamRepo},
-		GetUC: &usecase.GetTeam{Repository: &teamRepo},
+		AddUC: &usecase.AddTeam{Team: &teamRepo, User: &userRepo},
+		GetUC: &usecase.GetTeam{Team: &teamRepo, User: &userRepo},
 	}
 
 	mux := http.NewServeMux()

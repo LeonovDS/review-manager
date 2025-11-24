@@ -50,10 +50,6 @@ func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
 // GetTeam - GET /team/get - get team info.
 func (h *Team) GetTeam(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("team_name")
-	if name == "" {
-		handleError(w, model.ErrBadRequest)
-		return
-	}
 
 	team, err := h.GetUC.Get(name)
 	if err != nil {
