@@ -34,14 +34,19 @@ func main() {
 
 	teamRepo := repository.Team{Pool: pool}
 	userRepo := repository.User{Pool: pool}
+	prRepo := repository.PullRequest{Pool: pool}
 	teamHandler := handlers.Team{
 		AddUC: &usecase.AddTeam{Team: &teamRepo, User: &userRepo},
 		GetUC: &usecase.GetTeam{Team: &teamRepo, User: &userRepo},
+	}
+	prHandler := handlers.PullRequest{
+		CreatePRUC: &usecase.CreatePR{PR: &prRepo, U: &userRepo},
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /team/add", teamHandler.AddTeam)
 	mux.HandleFunc("GET /team/get", teamHandler.GetTeam)
+	mux.HandleFunc("POST /pullRequest/create", prHandler.CreatePR)
 
 	var server http.Server
 	server.Addr = ":8080"

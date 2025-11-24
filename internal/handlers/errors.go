@@ -24,6 +24,9 @@ func handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, model.ErrTeamExists):
 		data.Code = "TEAM_EXISTS"
 		code = http.StatusBadRequest
+	case errors.Is(err, model.ErrPRExists):
+		data.Code = "PR_EXISTS"
+		code = http.StatusConflict
 	case errors.Is(err, model.ErrNotFound):
 		data.Code = "NOT_FOUND"
 		code = http.StatusNotFound
