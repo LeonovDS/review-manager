@@ -40,7 +40,7 @@ func (r *User) Add(ctx context.Context, t model.Team) error {
 }
 
 // GetByTeam acquires team members from one team.
-func (r *User) GetByTeam(ctx context.Context, teamName string) ([]model.TeamMember, error) {
+func (r *User) GetByTeam(ctx context.Context, teamName string) ([]model.User, error) {
 	query := `
 		SELECT user_id, username, is_active, team
 		FROM Users 
@@ -48,13 +48,13 @@ func (r *User) GetByTeam(ctx context.Context, teamName string) ([]model.TeamMemb
 	`
 	rows, err := r.Pool.Query(ctx, query, teamName)
 	if err != nil {
-		return []model.TeamMember{}, err
+		return []model.User{}, err
 	}
 	defer rows.Close()
 
-	results := []model.TeamMember{}
+	results := []model.User{}
 	for rows.Next() {
-		var member model.TeamMember
+		var member model.User
 		err := rows.Scan(&member.UserID, &member.Username, &member.IsActive, &member.TeamName)
 		if err != nil {
 			return nil, err
@@ -69,27 +69,27 @@ func (r *User) GetByTeam(ctx context.Context, teamName string) ([]model.TeamMemb
 	return results, nil
 }
 
-// GetUser find user or returns error if user is missing.
-func (r *User) GetUser(ctx context.Context, id string) (model.TeamMember, error) {
+// Get find user or returns error if user is missing.
+func (r *User) Get(ctx context.Context, id string) (model.User, error) {
 	query := `
 		SELECT user_id, username, is_active, team 
 		FROM Users 
 		WHERE user_id = $1;
 	`
-	var user model.TeamMember
+	var user model.User
 	err := r.Pool.QueryRow(ctx, query, id).Scan(
 		&user.UserID, &user.Username, &user.IsActive, &user.TeamName)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return model.TeamMember{}, model.ErrNotFound
+		return model.User{}, model.ErrNotFound
 	}
 	if err != nil {
-		return model.TeamMember{}, err
+		return model.User{}, err
 	}
 	return user, nil
 }
 
 // GetActiveTeamMembers finds other active users from the same team.
-func (r *User) GetActiveTeamMembers(ctx context.Context, userID, teamID string) ([]string, error) {
+func (r *User) GetActiveTeamMembers(ctx context.Context, user model.User) ([]string, error) {
 	query := `
 		SELECT user_id 
 		FROM Users 
@@ -98,7 +98,7 @@ func (r *User) GetActiveTeamMembers(ctx context.Context, userID, teamID string) 
 			AND is_active;
 	`
 	var teams []string
-	rows, err := r.Pool.Query(ctx, query, teamID, userID)
+	rows, err := r.Pool.Query(ctx, query, user.TeamName, user.UserID)
 	if err != nil {
 		return teams, err
 	}

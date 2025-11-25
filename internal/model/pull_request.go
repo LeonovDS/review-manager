@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// PullRequest contains full info about pull request.
+// PullRequest represents a pull request stored in the system.
 type PullRequest struct {
 	ID        string     `json:"pull_request_id"`
 	Name      string     `json:"pull_request_name"`
@@ -13,7 +13,7 @@ type PullRequest struct {
 	MergedAt  *time.Time `json:"mergedAt,omitempty"`
 }
 
-// Reviewer contains info about single reviewer of pull request.
+// Reviewer identifies a reviewer assigned to a pull request.
 type Reviewer struct {
 	PRID string `json:"pull_request_id"`
 	UID  string `json:"old_user_id"`

@@ -1,30 +1,37 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/LeonovDS/review-manager/internal/model"
+	"github.com/LeonovDS/review-manager/internal/usecase/user"
 )
 
-// User contains dependencies for /user handlers.
-type User struct {
-	RG   reviewGetter
-	SIAS setIsActiveSetter
+// UserHandler contains dependencies for /user handlers.
+type UserHandler struct {
+	reviews  *user.ReviewGetter
+	isActive *user.StatusUpdater
 }
 
-type reviewGetter interface {
-	Get(ctx context.Context, uID string) (model.ReviewReport, error)
+// NewUserHandler creates new UserHandler.
+func NewUserHandler(
+	reviews *user.ReviewGetter,
+	isActive *user.StatusUpdater,
+) UserHandler {
+	return UserHandler{
+		reviews:  reviews,
+		isActive: isActive,
+	}
 }
 
 // GetReview - GET /users/getReview - gets list of pull requests reviewed by one user.
-func (u *User) GetReview(w http.ResponseWriter, r *http.Request) {
+func (u *UserHandler) GetReview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	uID := r.URL.Query().Get("user_id")
 
-	report, err := u.RG.Get(ctx, uID)
+	report, err := u.reviews.Get(ctx, uID)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -42,12 +49,8 @@ type setIsActiveRequest struct {
 	IsActive bool   `json:"is_active"`
 }
 
-type setIsActiveSetter interface {
-	SetIsActive(ctx context.Context, uID string, isActive bool) (model.TeamMember, error)
-}
-
 // SetIsActive - Post /users/setIsActive - sets user's isActive status.
-func (u *User) SetIsActive(w http.ResponseWriter, r *http.Request) {
+func (u *UserHandler) SetIsActive(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var req setIsActiveRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -56,7 +59,7 @@ func (u *User) SetIsActive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.SIAS.SetIsActive(ctx, req.UID, req.IsActive)
+	user, err := u.isActive.SetIsActive(ctx, req.UID, req.IsActive)
 	if err != nil {
 		handleError(w, err)
 	}

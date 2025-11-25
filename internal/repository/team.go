@@ -31,7 +31,7 @@ func (r *Team) Add(ctx context.Context, team model.Team) (model.Team, error) {
 	} else if err != nil {
 		return model.Team{}, err
 	}
-	return model.Team{TeamName: name, Members: []model.TeamMember{}}, nil
+	return model.Team{TeamName: name, Members: []model.User{}}, nil
 }
 
 // Get searches database for team with given name.
@@ -49,5 +49,5 @@ func (r *Team) Get(ctx context.Context, name string) (model.Team, error) {
 		return model.Team{}, err
 	}
 
-	return model.Team{TeamName: name, Members: []model.TeamMember{}}, nil
+	return model.Team{TeamName: name, Members: []model.User{}}, nil
 }

@@ -1,14 +1,14 @@
-// Package model provides types used across layers.
+// Package model provides types domain and API types.
 package model
 
-// Team used in API, data and domain layers.
+// Team represents a group of users participating in reviews.
 type Team struct {
-	TeamName string       `json:"team_name"`
-	Members  []TeamMember `json:"members"`
+	TeamName string `json:"team_name"`
+	Members  []User `json:"members"`
 }
 
-// TeamMember represents User only as part of Team type.
-type TeamMember struct {
+// User represents an application user and their team membership.
+type User struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	IsActive bool   `json:"is_active"`

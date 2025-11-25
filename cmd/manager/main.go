@@ -9,8 +9,6 @@ import (
 
 	"github.com/LeonovDS/review-manager/internal/database"
 	"github.com/LeonovDS/review-manager/internal/handlers"
-	"github.com/LeonovDS/review-manager/internal/repository"
-	"github.com/LeonovDS/review-manager/internal/usecase"
 	"github.com/joho/godotenv"
 )
 
@@ -32,35 +30,9 @@ func main() {
 
 	slog.Info("Database connection created")
 
-	teamRepo := repository.Team{Pool: pool}
-	userRepo := repository.User{Pool: pool}
-	prRepo := repository.PullRequest{Pool: pool}
-	teamHandler := handlers.Team{
-		AddUC: &usecase.AddTeam{Team: &teamRepo, User: &userRepo},
-		GetUC: &usecase.GetTeam{Team: &teamRepo, User: &userRepo},
-	}
-	prHandler := handlers.PullRequest{
-		CreateUC:   &usecase.CreatePR{PR: &prRepo, U: &userRepo},
-		MergeUC:    &usecase.MergePR{PR: &prRepo},
-		ReassignUC: &usecase.ReassignPR{PR: &prRepo, U: &userRepo},
-	}
-	userHandler := handlers.User{
-		RG:   &usecase.GetReviews{PR: &prRepo},
-		SIAS: &usecase.SetIsActive{IAS: &userRepo, U: &userRepo},
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /team/add", teamHandler.AddTeam)
-	mux.HandleFunc("GET /team/get", teamHandler.GetTeam)
-	mux.HandleFunc("POST /pullRequest/create", prHandler.CreatePR)
-	mux.HandleFunc("POST /pullRequest/merge", prHandler.MergePR)
-	mux.HandleFunc("POST /pullRequest/reassign", prHandler.ReassignPR)
-	mux.HandleFunc("GET /users/getReview", userHandler.GetReview)
-	mux.HandleFunc("POST /users/setIsActive", userHandler.SetIsActive)
-
 	var server http.Server
 	server.Addr = ":8080"
-	server.Handler = mux
+	server.Handler = handlers.NewRouter(pool)
 	server.ReadHeaderTimeout = 1 * time.Second
 
 	err = server.ListenAndServe()
