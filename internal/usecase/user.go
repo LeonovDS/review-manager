@@ -31,3 +31,29 @@ func (r *GetReviews) Get(ctx context.Context, uID string) (model.ReviewReport, e
 		PullRequests: prs,
 	}, nil
 }
+
+// SetIsActive provides use case for updating user status.
+type SetIsActive struct {
+	IAS isActiveSetter
+	U   userRepositotyPR
+}
+
+type isActiveSetter interface {
+	SetIsActive(ctx context.Context, uID string, isActive bool) error
+}
+
+// SetIsActive sets isActive field of user.
+func (r *SetIsActive) SetIsActive(
+	ctx context.Context, uID string, isActive bool,
+) (model.TeamMember, error) {
+	if len(uID) == 0 {
+		return model.TeamMember{}, model.ErrBadRequest
+	}
+
+	err := r.IAS.SetIsActive(ctx, uID, isActive)
+	if err != nil {
+		return model.TeamMember{}, err
+	}
+
+	return r.U.GetUser(ctx, uID)
+}

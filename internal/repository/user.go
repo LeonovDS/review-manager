@@ -118,3 +118,21 @@ func (r *User) GetActiveTeamMembers(ctx context.Context, userID, teamID string) 
 	}
 	return teams, nil
 }
+
+// SetIsActive updates status of user, or returns error, if user not found.
+func (r *User) SetIsActive(ctx context.Context, uID string, isActive bool) error {
+	query := `
+		UPDATE Users
+		SET is_active = $2
+		WHERE user_id = $1;
+	`
+	cmd, err := r.Pool.Exec(ctx, query, uID, isActive)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return model.ErrNotFound
+	}
+
+	return nil
+}
