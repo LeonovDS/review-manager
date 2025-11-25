@@ -2,30 +2,30 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/LeonovDS/review-manager/internal/model"
+	"github.com/LeonovDS/review-manager/internal/usecase"
 )
 
-// Team contains dependencies for /team handlers.
-type Team struct {
-	AddUC addTeamUsecase
-	GetUC getTeamUsecase
+// TeamHandler contains dependencies for /team handlers.
+type TeamHandler struct {
+	add *usecase.AddTeam
+	get *usecase.GetTeam
 }
 
-type addTeamUsecase interface {
-	Add(ctx context.Context, t model.Team) (model.Team, error)
+// NewTeamHandler creates new TeamHandler.
+func NewTeamHandler(add *usecase.AddTeam, get *usecase.GetTeam) TeamHandler {
+	return TeamHandler{
+		add: add,
+		get: get,
+	}
 }
 
-type getTeamUsecase interface {
-	Get(ctx context.Context, name string) (model.Team, error)
-}
-
-// AddTeam - POST /team/add - adds team and users.
-func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
+// Add - POST /team/add - adds team and users.
+func (h *TeamHandler) Add(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var team model.Team
 	err := json.NewDecoder(r.Body).Decode(&team)
@@ -35,7 +35,7 @@ func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err = h.AddUC.Add(ctx, team)
+	team, err = h.add.Add(ctx, team)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -49,12 +49,12 @@ func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetTeam - GET /team/get - get team info.
-func (h *Team) GetTeam(w http.ResponseWriter, r *http.Request) {
+// Get - GET /team/get - get team info.
+func (h *TeamHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	name := r.URL.Query().Get("team_name")
 
-	team, err := h.GetUC.Get(ctx, name)
+	team, err := h.get.Get(ctx, name)
 	if err != nil {
 		handleError(w, err)
 		return
