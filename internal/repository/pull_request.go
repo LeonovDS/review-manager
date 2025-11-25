@@ -116,3 +116,37 @@ func (r *PullRequest) UpdateReviewer(ctx context.Context, prID, oUID, nUID strin
 	}
 	return nil
 }
+
+// GetByUserID finds all pull request reviewed by user with id uID.
+func (r *PullRequest) GetByUserID(
+	ctx context.Context, uID string,
+) ([]model.PullRequestShort, error) {
+	query := `
+		SELECT pr.pull_request_id, pr.pull_request_name, pr.author_id, pr.status
+		FROM PullRequest pr
+		LEFT JOIN UsersToPullRequests rev
+			ON pr.pull_request_id = rev.pull_request_id
+		WHERE rev.reviewer_id = $1;
+	`
+	rows, err := r.Pool.Query(ctx, query, uID)
+	if err != nil {
+		return []model.PullRequestShort{}, err
+	}
+
+	res := make([]model.PullRequestShort, 0, 1)
+	for rows.Next() {
+		var pr model.PullRequestShort
+		err := rows.Scan(&pr.ID, &pr.Name, &pr.Author, &pr.Status)
+		if err != nil {
+			return []model.PullRequestShort{}, err
+		}
+		res = append(res, pr)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return []model.PullRequestShort{}, err
+	}
+
+	return res, nil
+}
