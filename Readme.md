@@ -10,7 +10,8 @@
 docker compose up
 ```
 
-Или запускать сервер вне Docker:
+Или запускать сервер вне Docker
+(несмотря на все кэши для Docker, всё ещё немного быстрее):
 
 ```bash
 docker compose up database --detach
@@ -35,6 +36,8 @@ Git-хуки организованы через [lefthook](https://github.com/e
 ```bash
 lefthook install
 ```
+
+Схема API в `openapi.yml`
 
 ## Выбор линтеров
 
