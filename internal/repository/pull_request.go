@@ -89,7 +89,7 @@ func (r *PullRequest) Get(ctx context.Context, id string) (model.PullRequest, er
 	`
 
 	var pr model.PullRequest
-	var mergedAt time.Time
+	var mergedAt *time.Time
 	err := r.Pool.QueryRow(ctx, query, id).Scan(
 		&pr.ID, &pr.Name, &pr.AuthorID, &pr.Status, &pr.CreatedAt, &mergedAt, &pr.Reviewers)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -98,6 +98,21 @@ func (r *PullRequest) Get(ctx context.Context, id string) (model.PullRequest, er
 		return model.PullRequest{}, err
 	}
 
-	pr.MergedAt = &mergedAt
+	pr.MergedAt = mergedAt
 	return pr, nil
+}
+
+// UpdateReviewer changes one reviewer for pull request.
+func (r *PullRequest) UpdateReviewer(ctx context.Context, prID, oUID, nUID string) error {
+	query := `
+		UPDATE UsersToPullRequests
+		SET reviewer_id = $3
+		WHERE pull_request_id = $1 
+			AND reviewer_id = $2;
+	`
+	_, err := r.Pool.Exec(ctx, query, prID, oUID, nUID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

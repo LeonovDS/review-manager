@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/rand"
+	"slices"
 
 	"github.com/LeonovDS/review-manager/internal/model"
 )
@@ -14,17 +15,18 @@ type pullRequestRepository interface {
 	AssignReviewers(ctx context.Context, prID string, reviewers []string) error
 	Merge(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (model.PullRequest, error)
+	UpdateReviewer(ctx context.Context, prID, oUID, nUID string) error
 }
 
-type userRepositoty interface {
-	GetTeam(ctx context.Context, id string) (string, error)
+type userRepositotyPR interface {
 	GetActiveTeamMembers(ctx context.Context, userID, teamID string) ([]string, error)
+	GetUser(ctx context.Context, userID string) (model.TeamMember, error)
 }
 
 // CreatePR provides use case for creating pull request.
 type CreatePR struct {
 	PR pullRequestRepository
-	U  userRepositoty
+	U  userRepositotyPR
 }
 
 const maxReviewers int = 2
@@ -36,12 +38,12 @@ func (u *CreatePR) Create(ctx context.Context, id, name, author string) (model.P
 		return model.PullRequest{}, err
 	}
 
-	teamID, err := u.U.GetTeam(ctx, author)
+	user, err := u.U.GetUser(ctx, author)
 	if err != nil {
 		return model.PullRequest{}, err
 	}
 
-	teamMembers, err := u.U.GetActiveTeamMembers(ctx, author, teamID)
+	teamMembers, err := u.U.GetActiveTeamMembers(ctx, author, user.TeamName)
 	if err != nil {
 		return model.PullRequest{}, err
 	}
@@ -110,4 +112,58 @@ func (u *MergePR) Merge(ctx context.Context, id string) (model.PullRequest, erro
 		return model.PullRequest{}, err
 	}
 	return pr, nil
+}
+
+// ReassignPR provides use case for reassigning pull requests.
+type ReassignPR struct {
+	PR pullRequestRepository
+	U  userRepositotyPR
+}
+
+// Reassign checks if user is actual reviewer of pull request and finds active team member who can review PR instead.
+func (u *ReassignPR) Reassign(ctx context.Context, r model.Reviewer) (model.Reviewer, error) {
+	if len(r.PRID) == 0 || len(r.UID) == 0 {
+		return model.Reviewer{}, model.ErrBadRequest
+	}
+
+	user, err := u.U.GetUser(ctx, r.UID)
+	if err != nil {
+		return model.Reviewer{}, err
+	}
+
+	pr, err := u.PR.Get(ctx, r.PRID)
+	if err != nil {
+		return model.Reviewer{}, err
+	}
+	if pr.Status == "MERGED" {
+		return model.Reviewer{}, model.ErrPRMerged
+	}
+	if !slices.Contains(pr.Reviewers, r.UID) {
+		return model.Reviewer{}, model.ErrNotAssigned
+	}
+
+	team, err := u.U.GetActiveTeamMembers(ctx, r.UID, user.TeamName)
+	if err != nil {
+		return model.Reviewer{}, err
+	}
+
+	team = slices.DeleteFunc(team, func(it string) bool {
+		return slices.Contains(pr.Reviewers, it) || it == pr.AuthorID
+	})
+
+	if len(team) == 0 {
+		return model.Reviewer{}, model.ErrNoCandidate
+	}
+
+	// #nosec G404
+	newID := team[rand.Intn(len(team))]
+	err = u.PR.UpdateReviewer(ctx, pr.ID, r.UID, newID)
+	if err != nil {
+		return model.Reviewer{}, err
+	}
+
+	return model.Reviewer{
+		PRID: r.PRID,
+		UID:  newID,
+	}, nil
 }
