@@ -12,21 +12,21 @@ type StatusUpdater struct {
 }
 
 type userRepo interface {
-	Get(ctx context.Context, id string) (model.TeamMember, error)
+	Get(ctx context.Context, id string) (model.User, error)
 	SetIsActive(ctx context.Context, uID string, isActive bool) error
 }
 
 // SetIsActive updates isActive field of user.
 func (r *StatusUpdater) SetIsActive(
 	ctx context.Context, uID string, isActive bool,
-) (model.TeamMember, error) {
+) (model.User, error) {
 	if len(uID) == 0 {
-		return model.TeamMember{}, model.ErrBadRequest
+		return model.User{}, model.ErrBadRequest
 	}
 
 	err := r.User.SetIsActive(ctx, uID, isActive)
 	if err != nil {
-		return model.TeamMember{}, err
+		return model.User{}, err
 	}
 
 	return r.User.Get(ctx, uID)

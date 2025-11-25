@@ -16,7 +16,7 @@ var (
 	errInternal = errors.New("internal error")
 	sampleTeam  = model.Team{
 		TeamName: "team1",
-		Members: []model.TeamMember{
+		Members: []model.User{
 			{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
 			{UserID: "u2", Username: "Bob", IsActive: true, TeamName: ""},
 		},
@@ -47,9 +47,9 @@ func (m *userMockRepo) Add(_ context.Context, team model.Team) error {
 	return args.Error(0)
 }
 
-func (m *userMockRepo) GetByTeam(_ context.Context, name string) ([]model.TeamMember, error) {
+func (m *userMockRepo) GetByTeam(_ context.Context, name string) ([]model.User, error) {
 	args := m.Called(name)
-	return args.Get(0).([]model.TeamMember), args.Error(1)
+	return args.Get(0).([]model.User), args.Error(1)
 }
 
 func TestTeamAdd_Validation(t *testing.T) {
@@ -63,24 +63,24 @@ func TestTeamAdd_Validation(t *testing.T) {
 	tests := []testCase{
 		{
 			testName: "Empty TeamName",
-			team: model.Team{TeamName: "", Members: []model.TeamMember{
+			team: model.Team{TeamName: "", Members: []model.User{
 				{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
 			}},
 		},
 		{
 			testName: "Empty Members",
-			team:     model.Team{TeamName: "team1", Members: []model.TeamMember{}},
+			team:     model.Team{TeamName: "team1", Members: []model.User{}},
 		},
 		{
 			testName: "Empty UserID",
-			team: model.Team{TeamName: "team1", Members: []model.TeamMember{
+			team: model.Team{TeamName: "team1", Members: []model.User{
 				{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
 				{UserID: "", Username: "Bob", IsActive: true, TeamName: ""},
 			}},
 		},
 		{
 			testName: "Empty Username",
-			team: model.Team{TeamName: "team1", Members: []model.TeamMember{
+			team: model.Team{TeamName: "team1", Members: []model.User{
 				{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
 				{UserID: "u2", Username: "", IsActive: true, TeamName: ""},
 			}},

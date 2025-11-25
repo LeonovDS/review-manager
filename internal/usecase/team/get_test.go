@@ -31,7 +31,7 @@ func TestTeamGet(t *testing.T) {
 			testName: "Happy path",
 			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
 				_ = tR.On("Get", "team1").Return(
-					model.Team{TeamName: "team1", Members: []model.TeamMember{}}, nil)
+					model.Team{TeamName: "team1", Members: []model.User{}}, nil)
 				_ = uR.On("GetByTeam", "team1").Return(sampleTeam.Members, nil)
 			},
 			teamName:    "team1",
@@ -42,7 +42,7 @@ func TestTeamGet(t *testing.T) {
 			testName: "Not Found",
 			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
 				_ = tR.On("Get", "team1").Return(noTeam, model.ErrNotFound)
-				_ = uR.On("GetByTeam", "team1").Return([]model.TeamMember{}, nil)
+				_ = uR.On("GetByTeam", "team1").Return([]model.User{}, nil)
 			},
 			teamName:    "team1",
 			expected:    noTeam,
@@ -52,18 +52,18 @@ func TestTeamGet(t *testing.T) {
 			testName: "Empty members",
 			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
 				_ = tR.On("Get", "team1").Return(
-					model.Team{TeamName: "team1", Members: []model.TeamMember{}}, nil)
-				_ = uR.On("GetByTeam", "team1").Return([]model.TeamMember{}, nil)
+					model.Team{TeamName: "team1", Members: []model.User{}}, nil)
+				_ = uR.On("GetByTeam", "team1").Return([]model.User{}, nil)
 			},
 			teamName:    "team1",
-			expected:    model.Team{TeamName: "team1", Members: []model.TeamMember{}},
+			expected:    model.Team{TeamName: "team1", Members: []model.User{}},
 			expectedErr: nil,
 		},
 		{
 			testName: "Internal error",
 			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
 				_ = tR.On("Get", "team1").Return(sampleTeam, nil)
-				_ = uR.On("GetByTeam", "team1").Return([]model.TeamMember{}, errInternal)
+				_ = uR.On("GetByTeam", "team1").Return([]model.User{}, errInternal)
 			},
 			teamName:    "team1",
 			expected:    noTeam,

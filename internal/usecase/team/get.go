@@ -17,7 +17,7 @@ type teamGetterRepository interface {
 }
 
 type userGetterRepository interface {
-	GetByTeam(ctx context.Context, name string) ([]model.TeamMember, error)
+	GetByTeam(ctx context.Context, name string) ([]model.User, error)
 }
 
 // Get queries repository for a team with given name.

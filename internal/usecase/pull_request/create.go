@@ -20,8 +20,8 @@ type prCreatorRepo interface {
 }
 
 type userRepo interface {
-	Get(ctx context.Context, id string) (model.TeamMember, error)
-	GetActiveTeamMembers(ctx context.Context, user model.TeamMember) ([]string, error)
+	Get(ctx context.Context, id string) (model.User, error)
+	GetActiveTeamMembers(ctx context.Context, user model.User) ([]string, error)
 }
 
 const maxReviewers int = 2
