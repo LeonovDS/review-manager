@@ -15,7 +15,7 @@ type User struct {
 }
 
 // Add saves users to database.
-func (r *User) Add(t model.Team) error {
+func (r *User) Add(ctx context.Context, t model.Team) error {
 	query := `
 		INSERT INTO Users (user_id, username, is_active, team)
 		VALUES ($1, $2, $3, $4)
@@ -27,7 +27,7 @@ func (r *User) Add(t model.Team) error {
 	for _, u := range t.Members {
 		batch.Queue(query, u.UserID, u.Username, u.IsActive, t.TeamName)
 	}
-	br := r.Pool.SendBatch(context.TODO(), &batch)
+	br := r.Pool.SendBatch(ctx, &batch)
 	defer func() { _ = br.Close() }()
 
 	for range t.Members {
@@ -40,13 +40,13 @@ func (r *User) Add(t model.Team) error {
 }
 
 // GetByTeam acquires team members from one team.
-func (r *User) GetByTeam(teamName string) ([]model.TeamMember, error) {
+func (r *User) GetByTeam(ctx context.Context, teamName string) ([]model.TeamMember, error) {
 	query := `
 		SELECT user_id, username, is_active
 		FROM Users 
 		WHERE team = $1;
 	`
-	rows, err := r.Pool.Query(context.TODO(), query, teamName)
+	rows, err := r.Pool.Query(ctx, query, teamName)
 	if err != nil {
 		return []model.TeamMember{}, err
 	}
@@ -70,14 +70,14 @@ func (r *User) GetByTeam(teamName string) ([]model.TeamMember, error) {
 }
 
 // UserExist checks if user with given id exists in database and returns error if missing.
-func (r *User) UserExist(id string) error {
+func (r *User) UserExist(ctx context.Context, id string) error {
 	query := `
 		SELECT user_id
 		FROM Users 
 		WHERE user_id = $1;
 	`
 	var userID string
-	err := r.Pool.QueryRow(context.TODO(), query, id).Scan(&userID)
+	err := r.Pool.QueryRow(ctx, query, id).Scan(&userID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.ErrNotFound
 	}

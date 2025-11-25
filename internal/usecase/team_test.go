@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -27,12 +28,12 @@ type teamMockRepo struct {
 	mock.Mock
 }
 
-func (m *teamMockRepo) Add(team model.Team) (model.Team, error) {
+func (m *teamMockRepo) Add(_ context.Context, team model.Team) (model.Team, error) {
 	args := m.Called(team)
 	return args.Get(0).(model.Team), args.Error(1)
 }
 
-func (m *teamMockRepo) Get(name string) (model.Team, error) {
+func (m *teamMockRepo) Get(_ context.Context, name string) (model.Team, error) {
 	args := m.Called(name)
 	return args.Get(0).(model.Team), args.Error(1)
 }
@@ -41,12 +42,12 @@ type userMockRepo struct {
 	mock.Mock
 }
 
-func (m *userMockRepo) Add(team model.Team) error {
+func (m *userMockRepo) Add(_ context.Context, team model.Team) error {
 	args := m.Called(team)
 	return args.Error(0)
 }
 
-func (m *userMockRepo) GetByTeam(name string) ([]model.TeamMember, error) {
+func (m *userMockRepo) GetByTeam(_ context.Context, name string) ([]model.TeamMember, error) {
 	args := m.Called(name)
 	return args.Get(0).([]model.TeamMember), args.Error(1)
 }
@@ -88,7 +89,7 @@ func TestTeamAdd_Validation(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			team, err := u.Add(test.team)
+			team, err := u.Add(t.Context(), test.team)
 			assert.ErrorIs(t, err, model.ErrBadRequest, "Expected ErrBadRequest")
 			assert.Equal(t, noTeam, team, "Expected default Team")
 		})
@@ -102,7 +103,7 @@ func TestTeamAdd(t *testing.T) {
 	userRepo.On("Add", mock.Anything).Return(nil)
 
 	u := usecase.AddTeam{Team: teamRepo, User: userRepo}
-	team, err := u.Add(sampleTeam)
+	team, err := u.Add(t.Context(), sampleTeam)
 	assert.Equal(t, sampleTeam, team)
 	assert.NoError(t, err)
 }
@@ -151,7 +152,7 @@ func TestTeamAdd_Errors(t *testing.T) {
 			userRepo := new(userMockRepo)
 			test.prepareMocks(teamRepo, userRepo)
 			u := usecase.AddTeam{Team: teamRepo, User: userRepo}
-			team, err := u.Add(test.input)
+			team, err := u.Add(t.Context(), test.input)
 			assert.Equal(t, noTeam, team)
 			assert.ErrorIs(t, err, test.expectedErr)
 		})
@@ -161,7 +162,7 @@ func TestTeamAdd_Errors(t *testing.T) {
 func TestTeamGet_Validate(t *testing.T) {
 	var u usecase.GetTeam
 
-	team, err := u.Get("")
+	team, err := u.Get(t.Context(), "")
 
 	assert.Equal(t, noTeam, team)
 	assert.ErrorIs(t, err, model.ErrBadRequest)
@@ -226,7 +227,7 @@ func TestTeamGet(t *testing.T) {
 			userRepo := new(userMockRepo)
 			test.prepareMocks(teamRepo, userRepo)
 			u := usecase.GetTeam{Team: teamRepo, User: userRepo}
-			team, err := u.Get(test.teamName)
+			team, err := u.Get(t.Context(), test.teamName)
 			assert.Equal(t, test.expected, team)
 			assert.ErrorIs(t, err, test.expectedErr)
 		})

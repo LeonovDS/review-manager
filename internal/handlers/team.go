@@ -2,6 +2,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -16,15 +17,16 @@ type Team struct {
 }
 
 type addTeamUsecase interface {
-	Add(t model.Team) (model.Team, error)
+	Add(ctx context.Context, t model.Team) (model.Team, error)
 }
 
 type getTeamUsecase interface {
-	Get(name string) (model.Team, error)
+	Get(ctx context.Context, name string) (model.Team, error)
 }
 
 // AddTeam - POST /team/add - adds team and users.
 func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var team model.Team
 	err := json.NewDecoder(r.Body).Decode(&team)
 	slog.Info("/team/add", "team", team)
@@ -33,7 +35,7 @@ func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err = h.AddUC.Add(team)
+	team, err = h.AddUC.Add(ctx, team)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -49,9 +51,10 @@ func (h *Team) AddTeam(w http.ResponseWriter, r *http.Request) {
 
 // GetTeam - GET /team/get - get team info.
 func (h *Team) GetTeam(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	name := r.URL.Query().Get("team_name")
 
-	team, err := h.GetUC.Get(name)
+	team, err := h.GetUC.Get(ctx, name)
 	if err != nil {
 		handleError(w, err)
 		return

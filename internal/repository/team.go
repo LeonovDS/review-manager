@@ -17,9 +17,9 @@ type Team struct {
 }
 
 // Add saves team to database or returns error, if team exists.
-func (r *Team) Add(team model.Team) (model.Team, error) {
+func (r *Team) Add(ctx context.Context, team model.Team) (model.Team, error) {
 	var name string
-	err := r.Pool.QueryRow(context.TODO(), `
+	err := r.Pool.QueryRow(ctx, `
 		INSERT INTO Team (name) 
 		VALUES ($1) 
 		ON CONFLICT (name) DO NOTHING 
@@ -35,9 +35,9 @@ func (r *Team) Add(team model.Team) (model.Team, error) {
 }
 
 // Get searches database for team with given name.
-func (r *Team) Get(name string) (model.Team, error) {
+func (r *Team) Get(ctx context.Context, name string) (model.Team, error) {
 	var dbName string
-	err := r.Pool.QueryRow(context.TODO(), `
+	err := r.Pool.QueryRow(ctx, `
 		SELECT (name) 
 		FROM Team 
 		WHERE name=$1;

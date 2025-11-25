@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -15,11 +16,11 @@ type PullRequest struct {
 }
 
 type createPR interface {
-	Create(id, name, author string) (model.PullRequest, error)
+	Create(ctx context.Context, id, name, author string) (model.PullRequest, error)
 }
 
 type mergePR interface {
-	Merge(id string) (model.PullRequest, error)
+	Merge(ctx context.Context, id string) (model.PullRequest, error)
 }
 
 type createPRRequest struct {
@@ -30,6 +31,7 @@ type createPRRequest struct {
 
 // CreatePR - POST /pullRequest/create - creates a new pull request or returns error, if it exists.
 func (h *PullRequest) CreatePR(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var req createPRRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -37,7 +39,7 @@ func (h *PullRequest) CreatePR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pr, err := h.CreateUC.Create(req.ID, req.Name, req.Author)
+	pr, err := h.CreateUC.Create(ctx, req.ID, req.Name, req.Author)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -57,6 +59,7 @@ type mergePRRequest struct {
 
 // MergePR - POST /pullRequest/merge - merges a pull request (idempotent).
 func (h *PullRequest) MergePR(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var req mergePRRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -64,7 +67,7 @@ func (h *PullRequest) MergePR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pr, err := h.MergeUC.Merge(req.ID)
+	pr, err := h.MergeUC.Merge(ctx, req.ID)
 	if err != nil {
 		handleError(w, err)
 		return
