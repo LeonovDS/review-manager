@@ -4,11 +4,13 @@ package team
 import (
 	"context"
 
+	"github.com/LeonovDS/review-manager/internal/database"
 	"github.com/LeonovDS/review-manager/internal/model"
 )
 
 // Adder provides use case for creating a new team.
 type Adder struct {
+	TX   database.TransactionManager
 	Team teamAdderRepo
 	User userAdderRepo
 }
@@ -28,12 +30,18 @@ func (u *Adder) Add(ctx context.Context, team model.Team) (model.Team, error) {
 		return model.Team{}, err
 	}
 
-	_, err = u.Team.Add(ctx, team)
-	if err != nil {
-		return model.Team{}, err
-	}
+	err = u.TX.WithTransaction(ctx, func(context.Context) error {
+		_, err = u.Team.Add(ctx, team)
+		if err != nil {
+			return err
+		}
 
-	err = u.User.Add(ctx, team)
+		err = u.User.Add(ctx, team)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return model.Team{}, err
 	}

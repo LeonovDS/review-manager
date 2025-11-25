@@ -52,6 +52,14 @@ func (m *userMockRepo) GetByTeam(_ context.Context, name string) ([]model.User, 
 	return args.Get(0).([]model.User), args.Error(1)
 }
 
+type fakeTransactionManager struct{}
+
+func (tm *fakeTransactionManager) WithTransaction(
+	ctx context.Context, transaction func(context.Context) error,
+) error {
+	return transaction(ctx)
+}
+
 func TestTeamAdd_Validation(t *testing.T) {
 	var u team.Adder
 
@@ -102,7 +110,7 @@ func TestTeamAdd(t *testing.T) {
 	teamRepo.On("Add", sampleTeam).Return(sampleTeam, nil)
 	userRepo.On("Add", mock.Anything).Return(nil)
 
-	u := team.Adder{Team: teamRepo, User: userRepo}
+	u := team.Adder{TX: &fakeTransactionManager{}, Team: teamRepo, User: userRepo}
 	team, err := u.Add(t.Context(), sampleTeam)
 	assert.Equal(t, sampleTeam, team)
 	assert.NoError(t, err)
@@ -151,7 +159,7 @@ func TestTeamAdd_Errors(t *testing.T) {
 			teamRepo := new(teamMockRepo)
 			userRepo := new(userMockRepo)
 			test.prepareMocks(teamRepo, userRepo)
-			u := team.Adder{Team: teamRepo, User: userRepo}
+			u := team.Adder{TX: &fakeTransactionManager{}, Team: teamRepo, User: userRepo}
 			team, err := u.Add(t.Context(), test.input)
 			assert.Equal(t, noTeam, team)
 			assert.ErrorIs(t, err, test.expectedErr)
