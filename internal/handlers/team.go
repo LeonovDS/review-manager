@@ -41,6 +41,7 @@ func (h *TeamHandler) Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(team)
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)
@@ -60,6 +61,7 @@ func (h *TeamHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(team)
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)
