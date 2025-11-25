@@ -69,8 +69,8 @@ func (r *User) GetByTeam(ctx context.Context, teamName string) ([]model.TeamMemb
 	return results, nil
 }
 
-// GetUser find user or returns error if user is missing.
-func (r *User) GetUser(ctx context.Context, id string) (model.TeamMember, error) {
+// Get find user or returns error if user is missing.
+func (r *User) Get(ctx context.Context, id string) (model.TeamMember, error) {
 	query := `
 		SELECT user_id, username, is_active, team 
 		FROM Users 
@@ -89,7 +89,7 @@ func (r *User) GetUser(ctx context.Context, id string) (model.TeamMember, error)
 }
 
 // GetActiveTeamMembers finds other active users from the same team.
-func (r *User) GetActiveTeamMembers(ctx context.Context, userID, teamID string) ([]string, error) {
+func (r *User) GetActiveTeamMembers(ctx context.Context, user model.TeamMember) ([]string, error) {
 	query := `
 		SELECT user_id 
 		FROM Users 
@@ -98,7 +98,7 @@ func (r *User) GetActiveTeamMembers(ctx context.Context, userID, teamID string) 
 			AND is_active;
 	`
 	var teams []string
-	rows, err := r.Pool.Query(ctx, query, teamID, userID)
+	rows, err := r.Pool.Query(ctx, query, user.TeamName, user.UserID)
 	if err != nil {
 		return teams, err
 	}

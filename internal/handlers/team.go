@@ -7,17 +7,17 @@ import (
 	"net/http"
 
 	"github.com/LeonovDS/review-manager/internal/model"
-	"github.com/LeonovDS/review-manager/internal/usecase"
+	"github.com/LeonovDS/review-manager/internal/usecase/team"
 )
 
 // TeamHandler contains dependencies for /team handlers.
 type TeamHandler struct {
-	add *usecase.AddTeam
-	get *usecase.GetTeam
+	add *team.Adder
+	get *team.Getter
 }
 
 // NewTeamHandler creates new TeamHandler.
-func NewTeamHandler(add *usecase.AddTeam, get *usecase.GetTeam) TeamHandler {
+func NewTeamHandler(add *team.Adder, get *team.Getter) TeamHandler {
 	return TeamHandler{
 		add: add,
 		get: get,

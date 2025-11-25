@@ -10,7 +10,9 @@ import (
 	"github.com/LeonovDS/review-manager/internal/database"
 	"github.com/LeonovDS/review-manager/internal/handlers"
 	"github.com/LeonovDS/review-manager/internal/repository"
-	"github.com/LeonovDS/review-manager/internal/usecase"
+	pullrequest "github.com/LeonovDS/review-manager/internal/usecase/pull_request"
+	"github.com/LeonovDS/review-manager/internal/usecase/team"
+	"github.com/LeonovDS/review-manager/internal/usecase/user"
 	"github.com/joho/godotenv"
 )
 
@@ -36,17 +38,17 @@ func main() {
 	userRepo := repository.User{Pool: pool}
 	prRepo := repository.PullRequest{Pool: pool}
 	teamHandler := handlers.NewTeamHandler(
-		&usecase.AddTeam{Team: &teamRepo, User: &userRepo},
-		&usecase.GetTeam{Team: &teamRepo, User: &userRepo},
+		&team.Adder{Team: &teamRepo, User: &userRepo},
+		&team.Getter{Team: &teamRepo, User: &userRepo},
 	)
 	prHandler := handlers.NewPullRequestHandler(
-		&usecase.CreatePR{PR: &prRepo, U: &userRepo},
-		&usecase.MergePR{PR: &prRepo},
-		&usecase.ReassignPR{PR: &prRepo, U: &userRepo},
+		&pullrequest.Creator{PR: &prRepo, User: &userRepo},
+		&pullrequest.Merger{PR: &prRepo},
+		&pullrequest.Reassigner{PR: &prRepo, User: &userRepo},
 	)
 	userHandler := handlers.NewUserHandler(
-		&usecase.GetReviews{PR: &prRepo},
-		&usecase.SetIsActive{IAS: &userRepo, U: &userRepo},
+		&user.ReviewGetter{PR: &prRepo},
+		&user.StatusUpdater{User: &userRepo},
 	)
 
 	mux := http.NewServeMux()

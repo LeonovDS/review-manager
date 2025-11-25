@@ -6,19 +6,19 @@ import (
 	"net/http"
 
 	"github.com/LeonovDS/review-manager/internal/model"
-	"github.com/LeonovDS/review-manager/internal/usecase"
+	"github.com/LeonovDS/review-manager/internal/usecase/user"
 )
 
 // UserHandler contains dependencies for /user handlers.
 type UserHandler struct {
-	reviews  *usecase.GetReviews
-	isActive *usecase.SetIsActive
+	reviews  *user.ReviewGetter
+	isActive *user.StatusUpdater
 }
 
 // NewUserHandler creates new UserHandler.
 func NewUserHandler(
-	reviews *usecase.GetReviews,
-	isActive *usecase.SetIsActive,
+	reviews *user.ReviewGetter,
+	isActive *user.StatusUpdater,
 ) UserHandler {
 	return UserHandler{
 		reviews:  reviews,

@@ -1,4 +1,4 @@
-package usecase_test
+package team_test
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/LeonovDS/review-manager/internal/model"
-	"github.com/LeonovDS/review-manager/internal/usecase"
+	"github.com/LeonovDS/review-manager/internal/usecase/team"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -53,7 +53,7 @@ func (m *userMockRepo) GetByTeam(_ context.Context, name string) ([]model.TeamMe
 }
 
 func TestTeamAdd_Validation(t *testing.T) {
-	var u usecase.AddTeam
+	var u team.Adder
 
 	type testCase struct {
 		testName string
@@ -102,7 +102,7 @@ func TestTeamAdd(t *testing.T) {
 	teamRepo.On("Add", sampleTeam).Return(sampleTeam, nil)
 	userRepo.On("Add", mock.Anything).Return(nil)
 
-	u := usecase.AddTeam{Team: teamRepo, User: userRepo}
+	u := team.Adder{Team: teamRepo, User: userRepo}
 	team, err := u.Add(t.Context(), sampleTeam)
 	assert.Equal(t, sampleTeam, team)
 	assert.NoError(t, err)
@@ -151,84 +151,9 @@ func TestTeamAdd_Errors(t *testing.T) {
 			teamRepo := new(teamMockRepo)
 			userRepo := new(userMockRepo)
 			test.prepareMocks(teamRepo, userRepo)
-			u := usecase.AddTeam{Team: teamRepo, User: userRepo}
+			u := team.Adder{Team: teamRepo, User: userRepo}
 			team, err := u.Add(t.Context(), test.input)
 			assert.Equal(t, noTeam, team)
-			assert.ErrorIs(t, err, test.expectedErr)
-		})
-	}
-}
-
-func TestTeamGet_Validate(t *testing.T) {
-	var u usecase.GetTeam
-
-	team, err := u.Get(t.Context(), "")
-
-	assert.Equal(t, noTeam, team)
-	assert.ErrorIs(t, err, model.ErrBadRequest)
-}
-
-type teamGetTestCase struct {
-	testName     string
-	prepareMocks func(tR *teamMockRepo, uR *userMockRepo)
-	teamName     string
-	expected     model.Team
-	expectedErr  error
-}
-
-func TestTeamGet(t *testing.T) {
-	tests := []teamGetTestCase{
-		{
-			testName: "Happy path",
-			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
-				_ = tR.On("Get", "team1").Return(
-					model.Team{TeamName: "team1", Members: []model.TeamMember{}}, nil)
-				_ = uR.On("GetByTeam", "team1").Return(sampleTeam.Members, nil)
-			},
-			teamName:    "team1",
-			expected:    sampleTeam,
-			expectedErr: nil,
-		},
-		{
-			testName: "Not Found",
-			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
-				_ = tR.On("Get", "team1").Return(noTeam, model.ErrNotFound)
-				_ = uR.On("GetByTeam", "team1").Return([]model.TeamMember{}, nil)
-			},
-			teamName:    "team1",
-			expected:    noTeam,
-			expectedErr: model.ErrNotFound,
-		},
-		{
-			testName: "Empty members",
-			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
-				_ = tR.On("Get", "team1").Return(
-					model.Team{TeamName: "team1", Members: []model.TeamMember{}}, nil)
-				_ = uR.On("GetByTeam", "team1").Return([]model.TeamMember{}, nil)
-			},
-			teamName:    "team1",
-			expected:    model.Team{TeamName: "team1", Members: []model.TeamMember{}},
-			expectedErr: nil,
-		},
-		{
-			testName: "Internal error",
-			prepareMocks: func(tR *teamMockRepo, uR *userMockRepo) {
-				_ = tR.On("Get", "team1").Return(sampleTeam, nil)
-				_ = uR.On("GetByTeam", "team1").Return([]model.TeamMember{}, errInternal)
-			},
-			teamName:    "team1",
-			expected:    noTeam,
-			expectedErr: errInternal,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.testName, func(t *testing.T) {
-			teamRepo := new(teamMockRepo)
-			userRepo := new(userMockRepo)
-			test.prepareMocks(teamRepo, userRepo)
-			u := usecase.GetTeam{Team: teamRepo, User: userRepo}
-			team, err := u.Get(t.Context(), test.teamName)
-			assert.Equal(t, test.expected, team)
 			assert.ErrorIs(t, err, test.expectedErr)
 		})
 	}

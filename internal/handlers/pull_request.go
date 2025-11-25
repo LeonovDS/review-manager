@@ -6,21 +6,21 @@ import (
 	"net/http"
 
 	"github.com/LeonovDS/review-manager/internal/model"
-	"github.com/LeonovDS/review-manager/internal/usecase"
+	pullrequest "github.com/LeonovDS/review-manager/internal/usecase/pull_request"
 )
 
 // PullRequestHandler provides handlers for pull request operations.
 type PullRequestHandler struct {
-	create   *usecase.CreatePR
-	merge    *usecase.MergePR
-	reassign *usecase.ReassignPR
+	create   *pullrequest.Creator
+	merge    *pullrequest.Merger
+	reassign *pullrequest.Reassigner
 }
 
 // NewPullRequestHandler creates new PullRequestHandler.
 func NewPullRequestHandler(
-	create *usecase.CreatePR,
-	merge *usecase.MergePR,
-	reassign *usecase.ReassignPR,
+	create *pullrequest.Creator,
+	merge *pullrequest.Merger,
+	reassign *pullrequest.Reassigner,
 ) PullRequestHandler {
 	return PullRequestHandler{
 		create:   create,
