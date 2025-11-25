@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -15,21 +14,19 @@ import (
 )
 
 // Connect applies migrations and creates connection pool to database.
-func Connect(ctx context.Context) (*pgxpool.Pool, error) {
-	connString := os.Getenv("DB_URL")
-
-	err := migrateUp(connString)
+func Connect(ctx context.Context, connStr, migrationSrc string) (*pgxpool.Pool, error) {
+	err := migrateUp(connStr, migrationSrc)
 	if err != nil {
 		return nil, err
 	}
 
-	pool, err := pgxpool.New(ctx, connString)
+	pool, err := pgxpool.New(ctx, connStr)
 	return pool, err
 }
 
-func migrateUp(connString string) error {
+func migrateUp(connString, migrationsSrc string) error {
 	connString = strings.Replace(connString, "postgres", "pgx", 1)
-	m, err := migrate.New("file://migrations/", connString)
+	m, err := migrate.New(migrationsSrc, connString)
 	if err != nil {
 		return err
 	}

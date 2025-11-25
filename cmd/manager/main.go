@@ -5,6 +5,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/LeonovDS/review-manager/internal/database"
@@ -21,7 +22,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pool, err := database.Connect(ctx)
+	connStr := os.Getenv("DB_URL")
+	migrationSrc := os.Getenv("MIGRATION_SRC")
+	pool, err := database.Connect(ctx, connStr, migrationSrc)
 	if err != nil {
 		slog.Error("Unable to perform migrations", slog.Any("err", err))
 		return
