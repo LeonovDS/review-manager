@@ -69,20 +69,51 @@ func (r *User) GetByTeam(ctx context.Context, teamName string) ([]model.TeamMemb
 	return results, nil
 }
 
-// UserExist checks if user with given id exists in database and returns error if missing.
-func (r *User) UserExist(ctx context.Context, id string) error {
+// GetTeam find user's team by userID and returns error if user is missing.
+func (r *User) GetTeam(ctx context.Context, id string) (string, error) {
 	query := `
-		SELECT user_id
+		SELECT team 
 		FROM Users 
 		WHERE user_id = $1;
 	`
-	var userID string
-	err := r.Pool.QueryRow(ctx, query, id).Scan(&userID)
+	var team string
+	err := r.Pool.QueryRow(ctx, query, id).Scan(&team)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return model.ErrNotFound
+		return "", model.ErrNotFound
 	}
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return team, nil
+}
+
+// GetActiveTeamMembers finds other active users from the same team.
+func (r *User) GetActiveTeamMembers(ctx context.Context, userID, teamID string) ([]string, error) {
+	query := `
+		SELECT user_id 
+		FROM Users 
+		WHERE team = $1 
+			AND user_id <> $2
+			AND is_active;
+	`
+	var teams []string
+	rows, err := r.Pool.Query(ctx, query, teamID, userID)
+	if err != nil {
+		return teams, err
+	}
+
+	for rows.Next() {
+		var teamID string
+		err := rows.Scan(&teamID)
+		if err != nil {
+			return []string{}, err
+		}
+		teams = append(teams, teamID)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return []string{}, err
+	}
+	return teams, nil
 }

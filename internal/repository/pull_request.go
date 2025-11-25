@@ -36,6 +36,27 @@ func (r *PullRequest) Create(
 	return pr, nil
 }
 
+// AssignReviewers adds reviewers to pull requests WITHOUT ADDITIONAL CHECKS.
+func (r *PullRequest) AssignReviewers(ctx context.Context, prID string, reviewers []string) error {
+	var batch pgx.Batch
+	query := `
+		INSERT INTO UsersToPullRequests (pull_request_id, reviewer_id)
+		VALUES ($1, $2);
+	`
+	for _, rID := range reviewers {
+		batch.Queue(query, prID, rID)
+	}
+	br := r.Pool.SendBatch(ctx, &batch)
+	defer func() { _ = br.Close() }()
+	for range reviewers {
+		_, err := br.Exec()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Merge updates pull request status.
 // Cannot separate cases when PR is not found or not updated, so needs additional checks on call side.
 func (r *PullRequest) Merge(ctx context.Context, id string) error {
