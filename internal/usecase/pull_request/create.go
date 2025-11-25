@@ -5,11 +5,13 @@ import (
 	"context"
 	"math/rand"
 
+	"github.com/LeonovDS/review-manager/internal/database"
 	"github.com/LeonovDS/review-manager/internal/model"
 )
 
 // Creator provides use case for creating pull request.
 type Creator struct {
+	TX   database.TransactionManager
 	PR   prCreatorRepo
 	User userRepo
 }
@@ -33,39 +35,47 @@ func (u *Creator) Create(ctx context.Context, id, name, author string) (model.Pu
 		return model.PullRequest{}, err
 	}
 
-	authorUser, err := u.User.Get(ctx, author)
+	var pr model.PullRequest
+	err = u.TX.WithTransaction(ctx, func(context.Context) error {
+		authorUser, err := u.User.Get(ctx, author)
+		if err != nil {
+			return err
+		}
+
+		teamMembers, err := u.User.GetActiveTeamMembers(ctx, authorUser)
+		if err != nil {
+			return err
+		}
+
+		reviewers := make([]string, 0, maxReviewers)
+		switch len(teamMembers) {
+		case 0:
+			break
+		case 1:
+			reviewers = append(reviewers, teamMembers[0])
+		default:
+			i1, i2 := randomPair(len(teamMembers))
+			reviewers = append(reviewers, teamMembers[i1])
+			reviewers = append(reviewers, teamMembers[i2])
+		}
+
+		pr, err = u.PR.Create(ctx, id, name, author)
+		if err != nil {
+			return err
+		}
+
+		err = u.PR.AssignReviewers(ctx, pr.ID, reviewers)
+		if err != nil {
+			return err
+		}
+
+		pr.Reviewers = reviewers
+		return nil
+	})
 	if err != nil {
 		return model.PullRequest{}, err
 	}
 
-	teamMembers, err := u.User.GetActiveTeamMembers(ctx, authorUser)
-	if err != nil {
-		return model.PullRequest{}, err
-	}
-
-	reviewers := make([]string, 0, maxReviewers)
-	switch len(teamMembers) {
-	case 0:
-		break
-	case 1:
-		reviewers = append(reviewers, teamMembers[0])
-	default:
-		i1, i2 := randomPair(len(teamMembers))
-		reviewers = append(reviewers, teamMembers[i1])
-		reviewers = append(reviewers, teamMembers[i2])
-	}
-
-	pr, err := u.PR.Create(ctx, id, name, author)
-	if err != nil {
-		return model.PullRequest{}, err
-	}
-
-	err = u.PR.AssignReviewers(ctx, pr.ID, reviewers)
-	if err != nil {
-		return model.PullRequest{}, err
-	}
-
-	pr.Reviewers = reviewers
 	return pr, nil
 }
 
