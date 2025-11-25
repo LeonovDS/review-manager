@@ -16,9 +16,12 @@ type PullRequest struct {
 }
 
 // Create creates pull request and returns it with created_at set.
-func (r *PullRequest) Create(prID, prName, author string) (model.PullRequest, error) {
+func (r *PullRequest) Create(
+	ctx context.Context,
+	prID, prName, author string,
+) (model.PullRequest, error) {
 	var pr model.PullRequest
-	err := r.Pool.QueryRow(context.TODO(), `
+	err := r.Pool.QueryRow(ctx, `
 		INSERT INTO PullRequest (pull_request_id, pull_request_name, author_id, status)	
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (pull_request_id) DO NOTHING
@@ -35,8 +38,8 @@ func (r *PullRequest) Create(prID, prName, author string) (model.PullRequest, er
 
 // Merge updates pull request status.
 // Cannot separate cases when PR is not found or not updated, so needs additional checks on call side.
-func (r *PullRequest) Merge(id string) error {
-	tag, err := r.Pool.Exec(context.TODO(), `
+func (r *PullRequest) Merge(ctx context.Context, id string) error {
+	tag, err := r.Pool.Exec(ctx, `
 		UPDATE PullRequest
 		SET status = 'MERGED', merged_at = NOW()
 		WHERE pull_request_id = $1 
@@ -52,10 +55,10 @@ func (r *PullRequest) Merge(id string) error {
 }
 
 // Get acquires pull request from repository.
-func (r *PullRequest) Get(id string) (model.PullRequest, error) {
+func (r *PullRequest) Get(ctx context.Context, id string) (model.PullRequest, error) {
 	var pr model.PullRequest
 	var mergedAt time.Time
-	err := r.Pool.QueryRow(context.TODO(), `
+	err := r.Pool.QueryRow(ctx, `
 		SELECT pull_request_id, pull_request_name, author_id, status, created_at, merged_at
 		FROM PullRequest
 		WHERE pull_request_id = $1;
