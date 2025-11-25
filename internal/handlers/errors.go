@@ -43,6 +43,8 @@ func handleError(w http.ResponseWriter, err error) {
 		data.Code = "INTERNAL_ERROR"
 		code = http.StatusInternalServerError
 	}
-	errString, _ := json.Marshal(data)
-	http.Error(w, string(errString), code)
+
+	w.WriteHeader(code)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(data)
 }

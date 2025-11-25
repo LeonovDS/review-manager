@@ -51,6 +51,7 @@ func (h *PullRequestHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(pr)
 	if err != nil {
@@ -80,6 +81,7 @@ func (h *PullRequestHandler) Merge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(pr)
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)
@@ -104,6 +106,7 @@ func (h *PullRequestHandler) Reassign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(rev)
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)

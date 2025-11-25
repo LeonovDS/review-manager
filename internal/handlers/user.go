@@ -38,6 +38,7 @@ func (u *UserHandler) GetReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = json.NewEncoder(w).Encode(report)
+	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)
 		return
@@ -65,6 +66,7 @@ func (u *UserHandler) SetIsActive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = json.NewEncoder(w).Encode(user)
+	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		slog.Error("Failed to write response", "err", err)
 		return
