@@ -17,8 +17,8 @@ var (
 	sampleTeam  = model.Team{
 		TeamName: "team1",
 		Members: []model.TeamMember{
-			{UserID: "u1", Username: "Alice", IsActive: true},
-			{UserID: "u2", Username: "Bob", IsActive: true},
+			{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
+			{UserID: "u2", Username: "Bob", IsActive: true, TeamName: ""},
 		},
 	}
 	noTeam model.Team
@@ -64,7 +64,7 @@ func TestTeamAdd_Validation(t *testing.T) {
 		{
 			testName: "Empty TeamName",
 			team: model.Team{TeamName: "", Members: []model.TeamMember{
-				{UserID: "u1", Username: "Alice", IsActive: true},
+				{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
 			}},
 		},
 		{
@@ -74,15 +74,15 @@ func TestTeamAdd_Validation(t *testing.T) {
 		{
 			testName: "Empty UserID",
 			team: model.Team{TeamName: "team1", Members: []model.TeamMember{
-				{UserID: "u1", Username: "Alice", IsActive: true},
-				{UserID: "", Username: "Bob", IsActive: true},
+				{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
+				{UserID: "", Username: "Bob", IsActive: true, TeamName: ""},
 			}},
 		},
 		{
 			testName: "Empty Username",
 			team: model.Team{TeamName: "team1", Members: []model.TeamMember{
-				{UserID: "u1", Username: "Alice", IsActive: true},
-				{UserID: "u2", Username: "", IsActive: true},
+				{UserID: "u1", Username: "Alice", IsActive: true, TeamName: ""},
+				{UserID: "u2", Username: "", IsActive: true, TeamName: ""},
 			}},
 		},
 	}

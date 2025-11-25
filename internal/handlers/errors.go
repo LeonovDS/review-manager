@@ -30,6 +30,15 @@ func handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, model.ErrNotFound):
 		data.Code = "NOT_FOUND"
 		code = http.StatusNotFound
+	case errors.Is(err, model.ErrPRMerged):
+		data.Code = "PR_MERGED"
+		code = http.StatusConflict
+	case errors.Is(err, model.ErrNoCandidate):
+		data.Code = "NO_CANDIDATE"
+		code = http.StatusConflict
+	case errors.Is(err, model.ErrNotAssigned):
+		data.Code = "NOT_ASSIGNED"
+		code = http.StatusConflict
 	default:
 		data.Code = "INTERNAL_ERROR"
 		code = http.StatusInternalServerError

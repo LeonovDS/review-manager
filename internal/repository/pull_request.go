@@ -75,21 +75,44 @@ func (r *PullRequest) Merge(ctx context.Context, id string) error {
 	return nil
 }
 
-// Get acquires pull request from repository.
+// Get acquires pull request with reviewers from repository.
 func (r *PullRequest) Get(ctx context.Context, id string) (model.PullRequest, error) {
+	query := `
+		SELECT
+			pr.pull_request_id, pr.pull_request_name, pr.author_id, pr.status, pr.created_at, pr.merged_at,
+			COALESCE(array_agg(rev.reviewer_id) FILTER (WHERE rev.reviewer_id IS NOT NULL), '{}') AS reviewers
+		FROM PullRequest pr
+		LEFT JOIN UsersToPullRequests rev 
+			ON rev.pull_request_id = pr.pull_request_id
+		WHERE pr.pull_request_id = $1
+		GROUP BY pr.pull_request_id;
+	`
+
 	var pr model.PullRequest
-	var mergedAt time.Time
-	err := r.Pool.QueryRow(ctx, `
-		SELECT pull_request_id, pull_request_name, author_id, status, created_at, merged_at
-		FROM PullRequest
-		WHERE pull_request_id = $1;
-	`, id).Scan(&pr.ID, &pr.Name, &pr.AuthorID, &pr.Status, &pr.CreatedAt, &mergedAt)
-	pr.MergedAt = &mergedAt
+	var mergedAt *time.Time
+	err := r.Pool.QueryRow(ctx, query, id).Scan(
+		&pr.ID, &pr.Name, &pr.AuthorID, &pr.Status, &pr.CreatedAt, &mergedAt, &pr.Reviewers)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.PullRequest{}, model.ErrNotFound
 	} else if err != nil {
 		return model.PullRequest{}, err
 	}
 
+	pr.MergedAt = mergedAt
 	return pr, nil
+}
+
+// UpdateReviewer changes one reviewer for pull request.
+func (r *PullRequest) UpdateReviewer(ctx context.Context, prID, oUID, nUID string) error {
+	query := `
+		UPDATE UsersToPullRequests
+		SET reviewer_id = $3
+		WHERE pull_request_id = $1 
+			AND reviewer_id = $2;
+	`
+	_, err := r.Pool.Exec(ctx, query, prID, oUID, nUID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

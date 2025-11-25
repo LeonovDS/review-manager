@@ -12,3 +12,9 @@ type PullRequest struct {
 	CreatedAt *time.Time `json:"createdAt"`
 	MergedAt  *time.Time `json:"mergedAt,omitempty"`
 }
+
+// Reviewer contains info about single reviewer of pull request.
+type Reviewer struct {
+	PRID string `json:"pull_request_id"`
+	UID  string `json:"old_user_id"`
+}

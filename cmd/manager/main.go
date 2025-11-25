@@ -40,8 +40,9 @@ func main() {
 		GetUC: &usecase.GetTeam{Team: &teamRepo, User: &userRepo},
 	}
 	prHandler := handlers.PullRequest{
-		CreateUC: &usecase.CreatePR{PR: &prRepo, U: &userRepo},
-		MergeUC:  &usecase.MergePR{PR: &prRepo},
+		CreateUC:   &usecase.CreatePR{PR: &prRepo, U: &userRepo},
+		MergeUC:    &usecase.MergePR{PR: &prRepo},
+		ReassignUC: &usecase.ReassignPR{PR: &prRepo, U: &userRepo},
 	}
 
 	mux := http.NewServeMux()
@@ -49,6 +50,7 @@ func main() {
 	mux.HandleFunc("GET /team/get", teamHandler.GetTeam)
 	mux.HandleFunc("POST /pullRequest/create", prHandler.CreatePR)
 	mux.HandleFunc("POST /pullRequest/merge", prHandler.MergePR)
+	mux.HandleFunc("POST /pullRequest/reassign", prHandler.ReassignPR)
 
 	var server http.Server
 	server.Addr = ":8080"
